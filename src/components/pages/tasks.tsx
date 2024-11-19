@@ -31,7 +31,7 @@ export default function Tasks() {
     const tasks = useSelector((state: RootState) => state.task.tasks);
     const projects = useSelector((state: RootState) => state.task.projects);
     let loading = useSelector((state: RootState) => state.task.loading);
-    const dispatch:AppDispatch = useDispatch();
+    const dispatch: AppDispatch = useDispatch();
     const { toast } = useToast();
 
     const [title, setTitle] = useState<string>("");

@@ -1,28 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-interface TaskState {
-    loading: boolean,
-    error: boolean,
-    tasks: Task[],
-    projects: Project[]
-}
-
-interface Task {
-    id: number,
-    title: string,
-    description: string,
-    date: string,
-    duration: number,
-    projectId: number,
-    projectName: string,
-    appraisalStatus: string,
-}
-
-interface Project {
-    id: number,
-    name: string
-}
-
 export const fetchTasks = createAsyncThunk("fetchTasks", async () => {
     const response = await fetch(`http://localhost:8080/api/v1/employees/1/tasks`);
     const tasks = await response.json();
