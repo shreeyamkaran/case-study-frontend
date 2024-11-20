@@ -18,10 +18,9 @@ interface TaskCardProps {
         projectName: string;
     },
     projects: [{
-            id: number,
-            name: string
-        }
-    ]
+        id: number,
+        name: string
+    }]
 }
 
 export default function TaskCard({ value, task, projects }: TaskCardProps) {

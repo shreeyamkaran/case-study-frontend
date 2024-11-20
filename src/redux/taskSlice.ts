@@ -1,25 +1,51 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export const fetchTasks = createAsyncThunk("fetchTasks", async () => {
-    const response = await fetch(`http://localhost:8080/api/v1/employees/1/tasks`);
+export const fetchTasks = createAsyncThunk("fetchTasks", async (employeeId: number) => {
+    const response = await fetch(`http://localhost:8080/api/v1/employees/${ employeeId }/tasks`);
     const tasks = await response.json();
     return tasks;
 });
 
-export const fetchProjects = createAsyncThunk("fetchProjects", async () => {
-    const response = await fetch(`http://localhost:8080/api/v1/employees/1/projects`);
+export const fetchProjects = createAsyncThunk("fetchProjects", async (employeeId: number) => {
+    const response = await fetch(`http://localhost:8080/api/v1/employees/${ employeeId }/projects`);
     const projects = await response.json();
     return projects;
 });
 
+interface TaskState {
+    loading: boolean,
+    error: boolean,
+    tasks: Task[],
+    projects: Project[]
+}
+
+interface Task {
+    id: number,
+    title: string,
+    description: string,
+    date: string,
+    duration: number,
+    appraisalStatus: string,
+    projectId: number,
+    projectName: string,
+    ratings: number
+}
+
+interface Project {
+    id: number,
+    name: string
+}
+
+const initialState: TaskState = {
+    loading: false,
+    error: false,
+    tasks: [],
+    projects: []
+}
+
 export const taskSlice = createSlice({
     name: "task",
-    initialState: {
-        loading: false,
-        error: false,
-        tasks: [],
-        projects: []
-    },
+    initialState,
     reducers: {
         createTask: (state, action) => {
             const task = action.payload;
@@ -30,7 +56,7 @@ export const taskSlice = createSlice({
         builder.addCase(fetchTasks.pending, (state, action) => {
             state.loading = true;
         });
-        builder.addCase(fetchTasks.fulfilled, (state, action) => {
+        builder.addCase(fetchTasks.fulfilled, (state, action: PayloadAction<Task[]>) => {
             state.loading = false;
             state.error = false;
             state.tasks = action.payload;
@@ -44,7 +70,7 @@ export const taskSlice = createSlice({
         builder.addCase(fetchProjects.pending, (state, action) => {
             state.loading = true;
         });
-        builder.addCase(fetchProjects.fulfilled, (state, action) => {
+        builder.addCase(fetchProjects.fulfilled, (state, action: PayloadAction<Project[]>) => {
             state.loading = false;
             state.error = false;
             state.projects = action.payload;

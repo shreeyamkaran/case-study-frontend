@@ -16,17 +16,6 @@ import { Checkbox } from "../ui/checkbox";
 import { Toaster } from "../ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 
-interface Task {
-    appraisalStatus: string;
-    date: string;
-    description: string;
-    duration: number;
-    id: number;
-    title: string;
-    projectId: number;
-    projectName: string;
-}
-
 export default function Tasks() {
     const tasks = useSelector((state: RootState) => state.task.tasks);
     const projects = useSelector((state: RootState) => state.task.projects);
@@ -42,8 +31,8 @@ export default function Tasks() {
     const [checked, setChecked] = useState<boolean>(false);
 
     useEffect(() => {
-        dispatch(fetchTasks());
-        dispatch(fetchProjects());
+        dispatch(fetchTasks(1));
+        dispatch(fetchProjects(1));
     }, []);
 
     const handleCreation = async () => {

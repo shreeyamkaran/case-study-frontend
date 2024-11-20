@@ -16,7 +16,7 @@ export default function Navbar() {
         }
     }
     return (
-        <div className="sticky top-0 backdrop-blur-lg shadow-sm flex justify-between items-center px-4 sm:px-20 py-2">
+        <div className="sticky top-0 bg-primary-foreground shadow-sm flex justify-between items-center px-4 sm:px-20 py-2">
             <Link to="/" className="text-xl sm:text-4xl">
                 Brand name
             </Link>
