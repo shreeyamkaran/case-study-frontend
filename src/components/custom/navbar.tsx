@@ -16,16 +16,16 @@ export default function Navbar() {
         }
     }
     return (
-        <div className="sticky top-0 bg-primary-foreground shadow-sm flex justify-between items-center px-4 sm:px-20 py-2">
+        <div className="sticky z-10 top-0 backdrop-blur-lg flex justify-between items-center px-4 sm:px-20 py-2">
             <Link to="/" className="text-xl sm:text-4xl">
-                Brand name
+                brand name
             </Link>
             <div className="flex items-center gap-4">
-                <Button variant="outline" size="icon" onClick={ () => navigate("/tasks") }><ClipboardCheck /></Button>
-                <Button variant="outline" size="icon" onClick={ () => navigate("/manage") }><Settings /></Button>
+                <Button variant="outline" size="sm" onClick={ () => navigate("/tasks") }><ClipboardCheck /></Button>
+                <Button variant="outline" size="sm" onClick={ () => navigate("/manage") }><Settings /></Button>
                 <Sheet>
                     <SheetTrigger asChild>
-                        <Button variant="outline" size="icon"><Bell /></Button>
+                        <Button variant="outline" size="sm"><Bell /></Button>
                     </SheetTrigger>
                     <SheetContent side="right">
                         <SheetHeader>
@@ -36,16 +36,16 @@ export default function Navbar() {
                         </SheetHeader>
                     </SheetContent>
                 </Sheet>
-                <Button variant="outline" size="icon" onClick={ toggleTheme }>
+                <Button variant="outline" size="sm" onClick={ toggleTheme }>
                     {
                         theme == "dark" ? (
-                            <Sun className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                            <Sun className="h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                         ) : (
                             <Moon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                         )
                     }
                 </Button>
-                <Button variant="secondary" size="icon" onClick={ () => navigate("/manage") }><LogOut /></Button>
+                <Button variant="secondary" size="sm" onClick={ () => navigate("/manage") }><LogOut /></Button>
             </div>
         </div>
     );

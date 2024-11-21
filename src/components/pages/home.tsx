@@ -8,36 +8,10 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { useEffect } from "react";
 import { fetchEmployeeDetails, fetchEmployeeProjects, fetchEmployeeSkillsAndRatings } from "@/redux/employeeSlice";
 
-interface Employee {
-    id: number,
-    name: string,
-    username: string,
-    designation: {
-        id: number,
-        name: string,
-        skills: [{
-            id: number,
-            name: string,
-            category: string
-        }]
-    },
-    dob: string,
-    gender: string,
-    doj: string,
-    ratings: number,
-    location: string
-}
-
-interface Project {
-    id: number,
-    name: string
-}
-
-
 export default function Home() {
     const loading = useSelector((state: RootState) => state.employee.loading);
-    const employee: Employee = useSelector((state: RootState) => state.employee.employeeDetails);
-    const projects: Project[] = useSelector((state: RootState) => state.employee.projects);
+    const employee = useSelector((state: RootState) => state.employee.employeeDetails);
+    const projects = useSelector((state: RootState) => state.employee.projects);
     const skillsAndRatings = useSelector((state: RootState) => state.employee.skillsAndRatings);
 
     const dispatch: AppDispatch = useDispatch();
@@ -134,12 +108,12 @@ export default function Home() {
                                                 skillsAndRatings.map((object, index) => {
                                                     return (
                                                         <TableRow key={ index } className="font-bold">
-                                                            <TableCell>{ object[0] }</TableCell>
+                                                            <TableCell>{ object.name }</TableCell>
                                                             <TableCell className="flex items-center gap-1">
-                                                                <p>{ object[1] }</p>
+                                                                <p>{ object.rating }</p>
                                                                 <Star size={ 16 } />
                                                             </TableCell>
-                                                            <TableCell>{ object[2] }</TableCell>
+                                                            <TableCell>{ object.category }</TableCell>
                                                         </TableRow>
                                                     );
                                                 })

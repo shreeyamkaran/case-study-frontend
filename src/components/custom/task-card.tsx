@@ -86,7 +86,7 @@ export default function TaskCard({ value, task, projects }: TaskCardProps) {
                             duration={ duration } setDuration={ setDuration }
                             appraisalStatus={ appraisalStatus } setAppraisalStatus={ setAppraisalStatus }
                         />
-                        <Button variant="destructive" size="icon"><Trash2 /></Button>
+                        <Button variant="destructive" size="sm"><Trash2 /> Delete Task</Button>
                     </div>
                 </div>
             </AccordionContent>

@@ -109,7 +109,7 @@ export default function Tasks() {
                 {
                     !loading && <Dialog onOpenChange={ open => !open && handleCloseDialog() }>
                         <DialogTrigger asChild>
-                            <Button className="fixed bottom-10 right-10 rounded-md" size="icon"><Plus /></Button>
+                            <Button className="fixed bottom-10 right-10 rounded-md" size="sm"><Plus />Add Task</Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-[920px]">
                             <DialogHeader>

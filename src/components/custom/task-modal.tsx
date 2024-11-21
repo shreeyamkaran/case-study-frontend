@@ -140,7 +140,7 @@ export default function TaskModal({
             <Toaster />
             <Dialog onOpenChange={ open => !open && handleCloseDialog() }>
                 <DialogTrigger asChild>
-                    <Button variant="outline" size="icon"><Pencil /></Button>
+                    <Button size="sm"><Pencil /> Edit Task</Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-[920px]">
                     <DialogHeader>

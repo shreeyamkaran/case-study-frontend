@@ -1,4 +1,4 @@
-import { CalendarDays, Check, CircleCheckBig, Clock, Settings, Star, X } from "lucide-react";
+import { CalendarDays, Check, CircleCheckBig, Clock, Settings, ShieldCheck, Star, X } from "lucide-react";
 import Navbar from "../custom/navbar";
 import { Button } from "../ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
@@ -9,45 +9,26 @@ import { Badge } from "../ui/badge";
 import { Label } from "../ui/label";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { fetchEmployeesUnderManager } from "@/redux/managerSlice";
+import { fetchEmployeesUnderManager, fetchProjectByManagerId } from "@/redux/managerSlice";
 import { fetchTasks } from "@/redux/taskSlice";
 import { fetchEmployeeDetails, fetchEmployeeSkillsAndRatings } from "@/redux/employeeSlice";
 
-interface Employee {
-    id: number,
-    name: string,
-    username: string,
-    designation: {
-        id: number,
-        name: string,
-        skills: [{
-            id: number,
-            name: string,
-            category: string
-        }]
-    },
-    dob: string,
-    gender: string,
-    doj: string,
-    ratings: number,
-    location: string
-}
-
 export default function Manage() {
-
     const [activeId, setActiveId] = useState<string>("");
     const [activeView, setActiveView] = useState<string>("");
 
     const dispatch: AppDispatch = useDispatch();
     const employeesUnderManager= useSelector((state: RootState) => state.manager.employeesUnderManager);
+    const currentProject = useSelector((state: RootState) => state.manager.projectUnderManager);
     const loading = useSelector((state: RootState) => state.manager.loading);
     const tasks = useSelector((state: RootState) => state.task.tasks);
     const taskLoading = useSelector((state: RootState) => state.task.loading);
     const activeEmployee = useSelector((state: RootState) => state.employee.employeeDetails);
     const employeeLoading = useSelector((state: RootState) => state.employee.loading);
     const employeeSkillsAndRatings = useSelector((state: RootState) => state.employee.skillsAndRatings);
-    
+
     useEffect(() => {
+        dispatch(fetchProjectByManagerId(5));
         dispatch(fetchEmployeesUnderManager(5));
     }, []);
 
@@ -84,13 +65,25 @@ export default function Manage() {
         return formattedDate;
     }
 
+    const getColor = (appraisalStatus: string) => {
+        switch(appraisalStatus) {
+            case "DID_NOT_APPLY": return "text-primary";
+            case "PENDING": return "text-yellow-400";
+            case "APPROVED": return "text-green-400";
+            case "REJECTED": return "text-red-400";
+        }
+    }
+
     if(loading) {
         return (
             <Fragment>
                 <Navbar />
                 <div className="px-2 py-2 sm:px-20 sm:py-10">
-                    <p className="text-2xl font-bold mb-5">Manage Employees</p>
-                    <div>Loading...</div>
+                    <div className="flex flex-col gap-4">
+                        <p className="text-2xl font-bold">Manage Employees</p>
+                        <p className="mb-5 flex items-center gap-1">Working on project <Badge>{ currentProject?.name }</Badge></p>
+                        <div>Loading...</div>
+                    </div>
                 </div>
             </Fragment>
         );
@@ -101,7 +94,10 @@ export default function Manage() {
             <Navbar />
             <div className={ `px-2 py-2 sm:px-20 sm:py-10 ${ activeId && "grid grid-cols-[1fr,2fr] gap-8" }` }>
                 <div>
-                    <p className="text-2xl font-bold mb-5">Manage Employees</p>
+                    <div className="flex flex-col gap-2">
+                        <p className="text-2xl font-bold">Manage Employees</p>
+                        <p className="mb-5 flex items-center gap-1">Working on project <Badge>{ currentProject?.name }</Badge></p>
+                    </div>
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -118,8 +114,7 @@ export default function Manage() {
                                             <TableCell>{ object.id }</TableCell>
                                             <TableCell>{ object.name }</TableCell>
                                             <TableCell className="flex gap-2">
-                                                <Button size="sm" id={ `${ object.id }-details` } variant="outline" onClick={ event => viewEmployeesDetails(event) }><Star /></Button>
-                                                <Button size="sm" id={ `${ object.id }-tasks` } variant="outline" onClick={ event => viewEmployeesTasks(event) }><Settings /></Button>
+                                                <Button size="sm" id={ `${ object.id }-tasks` } onClick={ event => viewEmployeesTasks(event) }><Settings /></Button>
                                             </TableCell>
                                         </TableRow>
                                     );
@@ -136,7 +131,13 @@ export default function Manage() {
                             <Fragment>
                                 <div className="flex flex-col gap-8">
                                     <div>
-                                        <p className="font-bold">Employee Details</p>
+                                        <div className="flex items-center justify-between">
+                                            <p className="font-bold">Employee Details</p>
+                                            <div className="flex gap-4">
+                                                <Button size="sm" id={ `${ activeId }-details` } onClick={ event => viewEmployeesDetails(event) }><Star /></Button>
+                                                <Button size="sm" id={ `${ activeId }-tasks` } onClick={ event => viewEmployeesTasks(event) }><Settings /></Button>
+                                            </div>
+                                        </div>
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
@@ -187,12 +188,12 @@ export default function Manage() {
                                                         {
                                                             employeeSkillsAndRatings.map((object, index) => {
                                                                 return (
-                                                                    <TableRow>
-                                                                        <TableCell>{ object[0] }</TableCell>
-                                                                        <TableCell>{ object[2] }</TableCell>
+                                                                    <TableRow key={ index }>
+                                                                        <TableCell>{ object.name }</TableCell>
+                                                                        <TableCell>{ object.category }</TableCell>
                                                                         <TableCell>
                                                                             <div className="flex items-center gap-1">
-                                                                                <p>{ object[1] }</p>
+                                                                                <p>{ object.rating }</p>
                                                                                 <Star size={ 16 } />
                                                                             </div>
                                                                         </TableCell>
@@ -219,12 +220,15 @@ export default function Manage() {
                                                 <div>
                                                     <Accordion type="multiple" className="w-full">
                                                         {
-                                                            tasks.map((object, index) => {
+                                                            tasks.filter(task => task.projectId == currentProject?.id).map((object, index) => {
                                                                 return (
                                                                     <AccordionItem key={ index } value={ `item-${ index + 1 }` }>
                                                                         <AccordionTrigger>
                                                                             <div className="flex justify-between items-center w-full px-2 sm:px-10">
-                                                                                <p className="text-lg">{ object.title }</p>
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <ShieldCheck className={ `${ getColor(object.appraisalStatus) }` } />
+                                                                                    <p className="text-lg">{ object.title }</p>
+                                                                                </div>
                                                                                 <div className="flex flex-col gap-2">
                                                                                     <Badge className="flex items-center gap-2">
                                                                                         <CalendarDays size={ 16 } />
@@ -238,18 +242,22 @@ export default function Manage() {
                                                                             </div>
                                                                         </AccordionTrigger>
                                                                         <AccordionContent>
-                                                                            <div className="flex flex-col gap-4">
+                                                                            <div className="flex flex-col gap-4 px-2 sm:px-10">
                                                                                 <p>{ object.description }</p>
                                                                                 <div className="flex gap-4 items-end">
                                                                                     <div>
-                                                                                        <Label>Rate this task</Label>
                                                                                         <div className="flex">
-                                                                                            <Input type="number" className="max-w-24 rounded-tr-none rounded-br-none" />
-                                                                                            <Button className="rounded-tl-none rounded-bl-none"><CircleCheckBig /></Button>
+                                                                                            <Input type="number" className="max-w-32 rounded-tr-none rounded-br-none" disabled={ object.appraisalStatus != ("DID_NOT_APPLY" || "PENDING") } placeholder="Rate this task" />
+                                                                                            <Button className="rounded-tl-none rounded-bl-none" disabled={ object.appraisalStatus != ("DID_NOT_APPLY" || "PENDING") }><CircleCheckBig /></Button>
                                                                                         </div>
                                                                                     </div>
-                                                                                    <Button><Check />Approve</Button>
-                                                                                    <Button variant="destructive"><X />Reject</Button>
+                                                                                    {
+                                                                                        object.appraisalStatus != "DID_NOT_APPLY" &&
+                                                                                        <Fragment>
+                                                                                            <Button disabled={ object.appraisalStatus == ("APPROVED" || "REJECTED") }><Check />Approve</Button>
+                                                                                            <Button variant="destructive" disabled={ object.appraisalStatus == ("APPROVED" || "REJECTED") }><X />Reject</Button>
+                                                                                        </Fragment>
+                                                                                    }
                                                                                 </div>
                                                                             </div>
                                                                         </AccordionContent>

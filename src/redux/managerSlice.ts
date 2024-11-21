@@ -6,10 +6,22 @@ export const fetchEmployeesUnderManager = createAsyncThunk("fetchEmployeesUnderM
     return data;
 });
 
+export const fetchProjectByManagerId = createAsyncThunk("fetchProjectByManagerId", async (managerId: number) => {
+    const response = await fetch(`http://localhost:8080/api/v1/projects/managers/${ managerId }`);
+    const data = await response.json();
+    return data;
+});
+
 interface ManagerState {
     loading: boolean,
     error: boolean,
-    employeesUnderManager: Employee[]
+    employeesUnderManager: Employee[],
+    projectUnderManager: Project | null
+}
+
+interface Project {
+    id: number,
+    name: string
 }
 
 interface Employee {
@@ -35,7 +47,8 @@ interface Employee {
 const initialState: ManagerState = {
     loading: false,
     error: false,
-    employeesUnderManager: []
+    employeesUnderManager: [],
+    projectUnderManager: null
 }
 
 export const managerSlice = createSlice({
@@ -54,6 +67,20 @@ export const managerSlice = createSlice({
             state.employeesUnderManager = action.payload;
         });
         builder.addCase(fetchEmployeesUnderManager.rejected, (state, action) => {
+            state.loading = false;
+            state.error = true;
+            console.log(action.payload);
+        });
+
+        builder.addCase(fetchProjectByManagerId.pending, (state, action) => {
+            state.loading = true;
+        });
+        builder.addCase(fetchProjectByManagerId.fulfilled, (state, action: PayloadAction<Project>) => {
+            state.loading = false;
+            state.error = false;
+            state.projectUnderManager = action.payload;
+        });
+        builder.addCase(fetchProjectByManagerId.rejected, (state, action) => {
             state.loading = false;
             state.error = true;
             console.log(action.payload);
