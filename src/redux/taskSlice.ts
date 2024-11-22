@@ -28,7 +28,8 @@ interface Task {
     appraisalStatus: string,
     projectId: number,
     projectName: string,
-    ratings: number
+    ratings: number,
+    numberOfRatings: number
 }
 
 interface Project {
@@ -50,6 +51,13 @@ export const taskSlice = createSlice({
         createTask: (state, action) => {
             const task = action.payload;
             state.tasks.push(task);
+        },
+        setTaskRating: (state, action: PayloadAction<{ taskId: number; newRating:number }>) => {
+            const { taskId, newRating } = action.payload;
+            const task = state.tasks.find((task) => task.id === taskId);
+            if (task) {
+              task.ratings = newRating; // Update the rating
+            }
         }
     },
     extraReducers: (builder) => {
@@ -83,5 +91,5 @@ export const taskSlice = createSlice({
     }
 });
 
-export const { createTask } = taskSlice.actions;
+export const { createTask, setTaskRating } = taskSlice.actions;
 export default taskSlice.reducer;

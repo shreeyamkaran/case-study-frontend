@@ -6,11 +6,10 @@ import { Fragment, useEffect, useState } from "react";
 import { Input } from "../ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { Badge } from "../ui/badge";
-import { Label } from "../ui/label";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { fetchEmployeesUnderManager, fetchProjectByManagerId } from "@/redux/managerSlice";
-import { fetchTasks } from "@/redux/taskSlice";
+import { fetchTasks, setTaskRating } from "@/redux/taskSlice";
 import { fetchEmployeeDetails, fetchEmployeeSkillsAndRatings } from "@/redux/employeeSlice";
 
 export default function Manage() {
@@ -28,8 +27,8 @@ export default function Manage() {
     const employeeSkillsAndRatings = useSelector((state: RootState) => state.employee.skillsAndRatings);
 
     useEffect(() => {
-        dispatch(fetchProjectByManagerId(5));
-        dispatch(fetchEmployeesUnderManager(5));
+        dispatch(fetchProjectByManagerId(3));
+        dispatch(fetchEmployeesUnderManager(3));
     }, []);
 
     useEffect(() => {
@@ -74,6 +73,36 @@ export default function Manage() {
         }
     }
 
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>, taskId: number) => {
+        let newRating = Number(event.target.value);
+        if(newRating > 5) {
+            newRating = 5;
+        } // Get the new rating value
+        // Dispatch action to update the rating of the task in Redux store
+        dispatch(setTaskRating({ taskId, newRating }));
+    };
+
+    const handleClick = async (taskId: number) => {
+        const task = tasks.find(task => task.id == taskId);
+        const taskRatings = task?.ratings;
+        const numberOfRatings = task?.numberOfRatings;
+        console.log("taskId = " + taskId);
+        console.log("taskRatings = " + taskRatings);
+        const url = (numberOfRatings == 0) ? `http://localhost:8080/api/v1/tasks/rateTask/${ taskId }` : `http://localhost:8080/api/v1/tasks/updateTaskRating/${ taskId }`;
+        try {
+            await fetch(url, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(taskRatings)
+            });
+        }
+        catch(error) {
+            console.log(error);
+        }
+    }
+
     if(loading) {
         return (
             <Fragment>
@@ -81,7 +110,7 @@ export default function Manage() {
                 <div className="px-2 py-2 sm:px-20 sm:py-10">
                     <div className="flex flex-col gap-4">
                         <p className="text-2xl font-bold">Manage Employees</p>
-                        <p className="mb-5 flex items-center gap-1">Working on project <Badge>{ currentProject?.name }</Badge></p>
+                        <div className="mb-5 flex items-center gap-1">Working on project <Badge>{ currentProject?.name }</Badge></div>
                         <div>Loading...</div>
                     </div>
                 </div>
@@ -96,7 +125,7 @@ export default function Manage() {
                 <div>
                     <div className="flex flex-col gap-2">
                         <p className="text-2xl font-bold">Manage Employees</p>
-                        <p className="mb-5 flex items-center gap-1">Working on project <Badge>{ currentProject?.name }</Badge></p>
+                        <div className="mb-5 flex items-center gap-1">Working on project <Badge>{ currentProject?.name }</Badge></div>
                     </div>
                     <Table>
                         <TableHeader>
@@ -157,6 +186,10 @@ export default function Manage() {
                                                 <TableRow>
                                                     <TableCell>Designation</TableCell>
                                                     <TableCell>{ activeEmployee.designation.name }</TableCell>
+                                                </TableRow>
+                                                <TableRow>
+                                                    <TableCell>Date of Joining</TableCell>
+                                                    <TableCell>{ formatdate(activeEmployee.doj) }</TableCell>
                                                 </TableRow>
                                                 <TableRow>
                                                     <TableCell>Overall Rating</TableCell>
@@ -247,8 +280,8 @@ export default function Manage() {
                                                                                 <div className="flex gap-4 items-end">
                                                                                     <div>
                                                                                         <div className="flex">
-                                                                                            <Input type="number" className="max-w-32 rounded-tr-none rounded-br-none" disabled={ object.appraisalStatus != ("DID_NOT_APPLY" || "PENDING") } placeholder="Rate this task" />
-                                                                                            <Button className="rounded-tl-none rounded-bl-none" disabled={ object.appraisalStatus != ("DID_NOT_APPLY" || "PENDING") }><CircleCheckBig /></Button>
+                                                                                            <Input type="number" className="max-w-32 rounded-tr-none rounded-br-none" placeholder="Rate this task" value={ object.ratings } onChange={ event => handleChange(event, object.id) } />
+                                                                                            <Button className="rounded-tl-none rounded-bl-none" onClick={ event => handleClick(object.id) }><CircleCheckBig /></Button>
                                                                                         </div>
                                                                                     </div>
                                                                                     {
