@@ -1,11 +1,7 @@
 import { cn } from "@/lib/utils"
 
-interface className {
-    className: string
-}
-
-export const LoadingSpinner = ({ className }: className) => {
-    <svg
+export const LoadingSpinner = () => {
+    return <svg
         xmlns="http://www.w3.org/2000/svg"
         width="24"
         height="24"
@@ -15,7 +11,7 @@ export const LoadingSpinner = ({ className }: className) => {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={cn("animate-spin", className)}
+        className={cn("animate-spin")}
       >
         <path d="M21 12a9 9 0 1 1-6.219-8.56" />
     </svg>

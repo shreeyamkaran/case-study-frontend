@@ -77,7 +77,7 @@ export default function Home() {
                                     <Label htmlFor="ratings-textfield">Overall Rating</Label>
                                     <div id="ratings-textfield" className="border py-1 px-2 rounded-md font-bold">
                                         <div className="flex items-center gap-1">
-                                            <p>{ employee.ratings }</p>
+                                            <p>{ parseFloat(employee.ratings.toFixed(1)) }</p>
                                             <Star size={ 16 } />
                                         </div>
                                     </div>

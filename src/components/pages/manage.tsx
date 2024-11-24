@@ -1,4 +1,4 @@
-import { CalendarDays, Check, CircleCheckBig, Clock, Settings, ShieldCheck, Star, X } from "lucide-react";
+import { CalendarDays, CircleCheckBig, Clock, Settings, ShieldCheck, Star } from "lucide-react";
 import Navbar from "../custom/navbar";
 import { Button } from "../ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
@@ -8,13 +8,19 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "..
 import { Badge } from "../ui/badge";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { fetchEmployeesUnderManager, fetchProjectByManagerId } from "@/redux/managerSlice";
+import { fetchEmployeesUnderManager, fetchProjectByManagerId, fetchSkillsRatingsByManager, updateSkillRating } from "@/redux/managerSlice";
 import { fetchTasks, setTaskRating } from "@/redux/taskSlice";
 import { fetchEmployeeDetails, fetchEmployeeSkillsAndRatings } from "@/redux/employeeSlice";
+import { useToast } from "@/hooks/use-toast";
+import { LoadingSpinner } from "@/utils/spinner";
+import { Toaster } from "../ui/toaster";
 
 export default function Manage() {
     const [activeId, setActiveId] = useState<string>("");
     const [activeView, setActiveView] = useState<string>("");
+    const [taskRateLoader, setTaskRateLoader] = useState<boolean>(false);
+    const [skillRateLoader, setSkillRateLoader] = useState<boolean>(false);
+    const { toast } = useToast();
 
     const dispatch: AppDispatch = useDispatch();
     const employeesUnderManager= useSelector((state: RootState) => state.manager.employeesUnderManager);
@@ -25,16 +31,18 @@ export default function Manage() {
     const activeEmployee = useSelector((state: RootState) => state.employee.employeeDetails);
     const employeeLoading = useSelector((state: RootState) => state.employee.loading);
     const employeeSkillsAndRatings = useSelector((state: RootState) => state.employee.skillsAndRatings);
+    const skillsRatedByManager = useSelector((state: RootState) => state.manager.skillsRatedByManager);
 
     useEffect(() => {
-        dispatch(fetchProjectByManagerId(3));
-        dispatch(fetchEmployeesUnderManager(3));
+        dispatch(fetchProjectByManagerId(5));
+        dispatch(fetchEmployeesUnderManager(5));
     }, []);
 
     useEffect(() => {
         dispatch(fetchTasks(Number(activeId)));
         dispatch(fetchEmployeeDetails(Number(activeId)));
         dispatch(fetchEmployeeSkillsAndRatings(Number(activeId)));
+        dispatch(fetchSkillsRatingsByManager({ managerId: 5, employeeId: Number(activeId) }));
     }, [activeId]);
 
     const viewEmployeesDetails = (event: React.MouseEvent) => {
@@ -82,27 +90,79 @@ export default function Manage() {
         dispatch(setTaskRating({ taskId, newRating }));
     };
 
+    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>, skillId: number) => {
+        let newRating = Number(event.target.value);
+        if(newRating > 5) {
+            newRating = 5;
+        }
+        dispatch(updateSkillRating({ skillId: skillId, ratings: newRating, employeeId: Number(activeId) }));
+    }
+
     const handleClick = async (taskId: number) => {
-        const task = tasks.find(task => task.id == taskId);
-        const taskRatings = task?.ratings;
-        const numberOfRatings = task?.numberOfRatings;
-        console.log("taskId = " + taskId);
-        console.log("taskRatings = " + taskRatings);
-        const url = (numberOfRatings == 0) ? `http://localhost:8080/api/v1/tasks/rateTask/${ taskId }` : `http://localhost:8080/api/v1/tasks/updateTaskRating/${ taskId }`;
         try {
-            await fetch(url, {
+            setTaskRateLoader(true);
+            const task = tasks.find(task => task.id === taskId);
+            if (!task) throw new Error("Task not found");
+    
+            const endpoint = task.numberOfRatings === 0 
+                ? `rateTask/${ task.id }` 
+                : `updateTaskRating/${ task.id }`;
+    
+            await fetch(`http://localhost:8080/api/v1/tasks/${ endpoint }`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(taskRatings)
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ rating: task.ratings })
+            });
+
+            toast({
+                "title": "Task rating added"
+            });
+            
+        } catch (error) {
+            console.error(error);
+            toast({
+                "title": "Something went wrong",
+                "variant": "destructive"
             });
         }
-        catch(error) {
-            console.log(error);
+        finally {
+            setTaskRateLoader(false);
         }
     }
 
+    const submitSkillsRatings = async () => {
+        try {
+            setSkillRateLoader(true);
+
+            const skillsObject = skillsRatedByManager.reduce((acc: Record<string, number>, skill) => {
+                // Use `String` to convert `skillId` to a string key
+                acc[String(skill.skillId)] = skill.ratings;
+                return acc;
+            }, {} as Record<string, number>); // Explicitly type the accumulator as Record<string, number>
+    
+            const response = await fetch(`http://localhost:8080/api/v1/skills/ratings/employee/${ activeId }/manager/5`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(skillsObject)
+            });
+
+            toast({
+                title: "Skills rated successfully"
+            });
+        }
+        catch(error) {
+            toast({
+                title: "Something went wrong",
+                variant: "destructive"
+            });
+        }
+        finally {
+            setSkillRateLoader(false);
+        }
+    }
+    
     if(loading) {
         return (
             <Fragment>
@@ -121,6 +181,7 @@ export default function Manage() {
     return (
         <div>
             <Navbar />
+            <Toaster />
             <div className={ `px-2 py-2 sm:px-20 sm:py-10 ${ activeId && "grid grid-cols-[1fr,2fr] gap-8" }` }>
                 <div>
                     <div className="flex flex-col gap-2">
@@ -130,9 +191,9 @@ export default function Manage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Id</TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Actions</TableHead>
+                                <TableHead className="w-1/3">Id</TableHead>
+                                <TableHead className="w-1/3 text-center">Name</TableHead>
+                                <TableHead className="w-1/3 text-right">Manage</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody className="font-bold">
@@ -141,8 +202,8 @@ export default function Manage() {
                                     return (
                                         <TableRow key={ object.id }>
                                             <TableCell>{ object.id }</TableCell>
-                                            <TableCell>{ object.name }</TableCell>
-                                            <TableCell className="flex gap-2">
+                                            <TableCell className="text-center">{ object.name }</TableCell>
+                                            <TableCell className="flex gap-2 justify-end">
                                                 <Button size="sm" id={ `${ object.id }-tasks` } onClick={ event => viewEmployeesTasks(event) }><Settings /></Button>
                                             </TableCell>
                                         </TableRow>
@@ -195,7 +256,7 @@ export default function Manage() {
                                                     <TableCell>Overall Rating</TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center gap-1">
-                                                            <p>{ activeEmployee.ratings }</p>
+                                                            <p>{ parseFloat(activeEmployee.ratings.toFixed(1)) }</p>
                                                             <Star size={ 16 } />
                                                         </div>
                                                     </TableCell>
@@ -231,7 +292,7 @@ export default function Manage() {
                                                                             </div>
                                                                         </TableCell>
                                                                         <TableCell>
-                                                                            <Input type="number" className="max-w-24" />
+                                                                            <Input type="number" className="max-w-24" disabled={ skillRateLoader } value={ skillsRatedByManager?.filter(s => s.skillId == object.id)[0]?.ratings || 0 } onChange={ event => handleInputChange(event, object.id) } />
                                                                         </TableCell>
                                                                     </TableRow>
                                                                 );
@@ -241,7 +302,7 @@ export default function Manage() {
                                                             <TableCell></TableCell>
                                                             <TableCell></TableCell>
                                                             <TableCell></TableCell>
-                                                            <TableCell><Button size="sm"><CircleCheckBig /></Button></TableCell>
+                                                            <TableCell><Button className="w-full max-w-24" onClick={ submitSkillsRatings }>{ skillRateLoader? <LoadingSpinner /> : <CircleCheckBig /> }</Button></TableCell>
                                                         </TableRow>
                                                     </TableBody>
                                                 </Table>
@@ -280,17 +341,10 @@ export default function Manage() {
                                                                                 <div className="flex gap-4 items-end">
                                                                                     <div>
                                                                                         <div className="flex">
-                                                                                            <Input type="number" className="max-w-32 rounded-tr-none rounded-br-none" placeholder="Rate this task" value={ object.ratings } onChange={ event => handleChange(event, object.id) } />
-                                                                                            <Button className="rounded-tl-none rounded-bl-none" onClick={ event => handleClick(object.id) }><CircleCheckBig /></Button>
+                                                                                            <Input type="number" className="max-w-32 rounded-tr-none rounded-br-none" placeholder="Rate this task" disabled={ taskRateLoader } value={ object.ratings } onChange={ event => handleChange(event, object.id) } />
+                                                                                            <Button className="rounded-tl-none rounded-bl-none" disabled={ taskRateLoader } onClick={ event => handleClick(object.id) }>{ taskRateLoader ? <LoadingSpinner /> : <CircleCheckBig />}</Button>
                                                                                         </div>
                                                                                     </div>
-                                                                                    {
-                                                                                        object.appraisalStatus != "DID_NOT_APPLY" &&
-                                                                                        <Fragment>
-                                                                                            <Button disabled={ object.appraisalStatus == ("APPROVED" || "REJECTED") }><Check />Approve</Button>
-                                                                                            <Button variant="destructive" disabled={ object.appraisalStatus == ("APPROVED" || "REJECTED") }><X />Reject</Button>
-                                                                                        </Fragment>
-                                                                                    }
                                                                                 </div>
                                                                             </div>
                                                                         </AccordionContent>
