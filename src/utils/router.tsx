@@ -1,4 +1,5 @@
 import ProtectedRoute from "@/components/custom/protected-route";
+import Admin from "@/components/pages/admin";
 import Home from "@/components/pages/home";
 import Login from "@/components/pages/login";
 import Manage from "@/components/pages/manage";
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
                 <Manage />
             </ProtectedRoute>
         )
+    },
+    {
+        path: "/admin",
+        element: <Admin />
     },
     {
         path: "/login",

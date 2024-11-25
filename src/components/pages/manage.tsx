@@ -203,7 +203,7 @@ export default function Manage() {
                                         <TableRow key={ object.id }>
                                             <TableCell>{ object.id }</TableCell>
                                             <TableCell className="text-center">{ object.name }</TableCell>
-                                            <TableCell className="flex gap-2 justify-end">
+                                            <TableCell className="flex justify-end">
                                                 <Button size="sm" id={ `${ object.id }-tasks` } onClick={ event => viewEmployeesTasks(event) }><Settings /></Button>
                                             </TableCell>
                                         </TableRow>
